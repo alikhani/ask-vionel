@@ -33,7 +33,7 @@ angular
       d.setMonth(d.getMonth() + 1);
 
         var cookie = name + '=' + JSON.stringify(value) + '; path=/; domain=.'+$location.host()+'; expires=' + d.toUTCString() + ';';
-        console.log("cookie: ",cookie);
+        // console.log("cookie: ",cookie);
 
       document.cookie = cookie;
     },
@@ -87,11 +87,11 @@ angular
         _authenticated = identity !== null;
 
         if (identity) {
-          console.log("set user: ",identity);
+          // console.log("set user: ",identity);
           Cookie.set("user",angular.toJson(identity));
           localStorage.setItem("user.identity", angular.toJson(identity)); 
         } else {
-          console.log("delete");
+          // console.log("delete");
           Cookie.delete("user");
           localStorage.removeItem("user.identity");
           _authenticated = false;
@@ -163,14 +163,14 @@ return deferred.promise;
           var isAuthenticated = principal.isAuthenticated();
           var user = principal.getUser();
 
-          console.log("auth: ",isAuthenticated,", user: ",user);
+          // console.log("auth: ",isAuthenticated,", user: ",user);
 
           if(isAuthenticated || user) {
-            console.log("there is a user");
+            // console.log("there is a user");
           } else {
-            console.log("not auth");
+            // console.log("not auth");
             principal.authenticateTempUser( function(resp) {
-              console.log("callback: ",resp);
+              // console.log("callback: ",resp);
               principal.authenticate(resp);
               // $state.transitionTo($state.current, $stateParams, {
               //   reload: true,
@@ -191,13 +191,13 @@ return deferred.promise;
         request: function(config) {
           var canceler = $q.defer();
           var p = $injector.get('principal');
-          console.log("bla");
+          // console.log("bla");
           user = p.getUser();
-          console.log("user: ",user);
+          // console.log("user: ",user);
           // console.log("getUser: ",user,", id: ",p.isIdentityResolved(),", root: ",$rootScope.user,", cookie: ",Cookie.get("user"));
           if (user) {
             // config.headers['X-Session-Token'] = user.sessionToken;
-            console.log("head: ",config);
+            // console.log("head: ",config);
           } else {
 
             // if(config.url !== "/api/temp_auth") {

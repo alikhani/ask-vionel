@@ -17,7 +17,51 @@ angular.module('askVionelApp')
 
     $scope.searchQuery = "";
 
-    console.log("bla");
+    $scope.step = 1;
+
+    var baseUrl = 'http://127.0.0.1:3044';
+    $scope.question = {};
+
+    function qInit() {
+        $http({method: 'POST', url: baseUrl + '/api/initial_question'}).
+            success(function(data, status, headers, config) {
+                console.log("success! status: ",status,", data: ",data);
+                $scope.question = data;
+                // callback(data);
+            }).
+            error(function(data, status, headers, config) {
+                console.log("error! status: ",status,", data: ",data);
+                // callback(data);
+            });
+    }
+
+    function questionResult(query) {
+        console.log("query: ",query);
+        $http({method: 'POST', url: baseUrl + '/api/question_results', data: query}).
+            success(function(data, status, headers, config) {
+                console.log("success! status: ",status,", data: ",data);
+                $scope.result = data;
+                // callback(data);
+            }).
+            error(function(data, status, headers, config) {
+                console.log("error! status: ",status,", data: ",data);
+                // callback(data);
+            });
+    }
+
+    function newTag(questions) {
+        $http({method: 'POST', url: baseUrl + '/api/new_tag', data: {"query": questions.query, "tags": questions.tags}}).
+            success(function(data, status, headers, config) {
+                console.log("success! status: ",status,", data: ",data);
+                // callback(data);
+            }).
+            error(function(data, status, headers, config) {
+                console.log("error! status: ",status,", data: ",data);
+                // callback(data);
+            });
+    }
+
+    qInit();
 
     function querySender(query) {
         var q = 'tags=genre:' + query;
@@ -62,35 +106,39 @@ angular.module('askVionelApp')
       }
     }
 
-    $scope.question = {'tag': 'genre', 'query': 'action', 'question': 'this is question 1'};
+    // $scope.question = {'tag': 'genre', 'query': 'action', 'question': 'this is question 1'};
 
-    $scope.result = [
-    {'title': "bla", 'thumbnailUrl': "/images/no-image3.jpg"},
-    {'title': "bla1", 'thumbnailUrl': "/images/no-image3.jpg"},
-    {'title': "bla2", 'thumbnailUrl': "/images/no-image3.jpg"}
-    ];
+    $scope.result = [];
 
-    $scope.yes = function(query, tag) {
+    $scope.yes = function(questions) {
         console.log("yes");
-        addFilter(query, tag, function(data) {
-            console.log("data: ",data);
-            querySender(query);
-        });
+        // newTag(questions);
+        questionResult(questions.query);
+        // questionResult(questions.query);
+        // addFilter(query, tag, function(data) {
+        //     console.log("data: ",data);
+        //     querySender(query);
+        // });
         
-        $scope.question = {'query': 'drama', 'question': 'this is question 2'};
-        $scope.result = [
-            {'title': "bla3", 'thumbnailUrl': "/images/no-image3.jpg"},
-            {'title': "bla4", 'thumbnailUrl': "/images/no-image3.jpg"},
-            {'title': "bla5", 'thumbnailUrl': "/images/no-image3.jpg"}
-        ];
+        // $scope.question = {'query': 'drama', 'question': 'this is question 2'};
+        // $scope.result = [
+        //     {'title': "bla3", 'thumbnailUrl': "/images/no-image3.jpg"},
+        //     {'title': "bla4", 'thumbnailUrl': "/images/no-image3.jpg"},
+        //     {'title': "bla5", 'thumbnailUrl': "/images/no-image3.jpg"}
+        // ];
     };
     $scope.no = function(query, tag) {
         console.log("no: ",tag);
-        $scope.question = {'query': 'drama', 'question': 'this is question 3'};
-        $scope.result = [
-            {'title': "bla3", 'thumbnailUrl': "/images/no-image3.jpg"},
-            {'title': "bla4", 'thumbnailUrl': "/images/no-image3.jpg"},
-            {'title': "bla5", 'thumbnailUrl': "/images/no-image3.jpg"}
-        ];
+        if ($scope.step) {
+            qInit();
+        } else {
+            questionResult(questions.query);
+        }
+        // $scope.question = {'query': 'drama', 'question': 'this is question 3'};
+        // $scope.result = [
+        //     {'title': "bla3", 'thumbnailUrl': "/images/no-image3.jpg"},
+        //     {'title': "bla4", 'thumbnailUrl': "/images/no-image3.jpg"},
+        //     {'title': "bla5", 'thumbnailUrl': "/images/no-image3.jpg"}
+        // ];
     };
   });

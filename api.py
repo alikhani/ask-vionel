@@ -22,7 +22,7 @@ import sys
 sys.path.append('/home/alden/documents/vionel-content/vionel-data-model')
 from vionelement import * 
 from vionmeta import get_new_fields
-from header import header
+# from header import header
 import random
 
 max_tries = 50
@@ -89,7 +89,7 @@ def add_tag_to_query(query, tag):
 	return query
 
 # TODO Should be updated to handle ranges
-def get_random_tag_pair_with_result(query, response_json, header=header):
+def get_random_tag_pair_with_result(query, response_json, header):
 	tag_pair = get_random_tag_pair(response_json)
 	new_query = Query(**query.as_dict())
 	for tag in tag_pair:
@@ -97,7 +97,7 @@ def get_random_tag_pair_with_result(query, response_json, header=header):
 	result = search_get('search', header, build_query_dict(new_query))
 	return tag_pair, result, new_query
 
-def get_valid_random_tag_pair(query, response_json, header=header):
+def get_valid_random_tag_pair(query, response_json, header):
 	for i in range(max_tries):
 		tag_pair, result, new_query = get_random_tag_pair_with_result(query, response_json, header)
 		if result['totalHits']:
@@ -772,28 +772,38 @@ def get_providers():
     return json.dumps(resp)
 
 @app.route('/api/initial_question', methods=['POST'])
-def initial_question(header):
-	query = Query()
-	q_response = search_get('search', header, build_query_dict(query))
-	tag_pair, new_query = get_valid_random_tag_pair(query, q_response, header)
-	response = {'tags' : tag_pair, 'query' : new_query.as_dict()}
-	return json.dumps(response)
-	
-@app.route('/api/question_results', methods=['POST'])
-def question_results(header, query):
-	query = Query(**query)
-	q_response = search_get('search', header, build_query_dict(query))
-	movies = get_random_movies_from_result(q_response)
-	return json.dumps(movies)
+@crossdomain(origin='*')
+def initial_question():
+    query = Query()
+    header = headerFixer(request.headers)
+    print header
+    q_response = search_get('search', header, build_query_dict(query))
+    tag_pair, new_query = get_valid_random_tag_pair(query, q_response, header)
+    response = {'tags' : tag_pair, 'query' : new_query.as_dict()}
+    return json.dumps(response)
+
+@app.route('/api/question_results', methods=['POST', 'OPTIONS'])
+@crossdomain(origin='*')
+def question_results():
+    q = json.loads(request.data)
+    print "q"
+    query = Query(**q)
+    header = headerFixer(request.headers)
+    q_response = search_get('search', header, build_query_dict(query))
+    movies = get_random_movies_from_result(q_response)
+    return json.dumps(movies)
 
 @app.route('/api/new_tag', methods=['POST'])
-def new_tag(header, query, tags):
-	query = Query(**query)
-	q_response = search_get('search', header, build_query_dict(query))
-	tag = get_random_tag(q_response)
-	add_tag_to_query(query, tag)
-	response = {'tags' : tags + [tag], 'query' : query.as_dict()}
-	return json.dumps(response)
+@crossdomain(origin='*')
+def new_tag(query, tags):
+    q = json.loads(request.data)
+    query = Query(**q.query)
+    header = headerFixer(request.headers)
+    q_response = search_get('search', header, build_query_dict(q.query))
+    tag = get_random_tag(q_response)
+    add_tag_to_query(q.query, q.tag)
+    response = {'tags' : q.tags + [tag], 'query' : q.query.as_dict()}
+    return json.dumps(response)
 
 app.secret_key = 'Me secret long time'
 
