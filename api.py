@@ -74,7 +74,8 @@ def get_random_movie_from_result(response_json, size=page_size):
 def get_random_movies_from_result(response_json, size=page_size, num_results=3):
 	if response_json['totalHits'] <= 2:
 		return response_json['response']['result']['movies']
-	idxs = random.sample(xrange(size), num_results)
+	max_i = response_json['totalHits'] if response_json['totalHits'] < size else size
+	idxs = random.sample(xrange(max_i), num_results)
 	movies = [response_json['response']['result']['movies'][i] for i in idxs]
 	return movies
 
@@ -787,7 +788,7 @@ def new_tag(header, query, tags):
 	q_response = search_get('search', header, build_query_dict(query))
 	tag = get_random_tag(q_response)
 	add_tag_to_query(query, tag)
-	response = {'tags' : tags + [tag], 'query' : new_query.as_dict()}
+	response = {'tags' : tags + [tag], 'query' : query.as_dict()}
 	return json.dumps(response)
 
 app.secret_key = 'Me secret long time'
