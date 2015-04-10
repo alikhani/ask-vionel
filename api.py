@@ -4,6 +4,8 @@ import urllib
 from flask import Flask, request, session
 import requests
 
+from crossdomain import crossdomain
+
 
 app = Flask(__name__)
 
@@ -300,6 +302,7 @@ def headerFixer(headers):
 
 
 @app.route('/api/temp_auth', methods=['POST'])
+@crossdomain(origin='*')
 def temp_login():
     header = {'X-Api-Key': api_key}
     resp = auth('auth/temp/login', header)
