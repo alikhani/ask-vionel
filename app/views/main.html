@@ -3,10 +3,10 @@
   <div class="question">
     <h2>{{question.question}}</h2>
     <div class="answer">
-      <div class="no" ng-click="no(question.query)">
+      <div class="no" ng-click="no(question.query, question.tag)">
         <i class="fa fa-thumbs-o-down"></i>
       </div>
-      <div class="yes" ng-click="yes(question.query)">
+      <div class="yes" ng-click="yes(question.query, question.tag)">
         <i class="fa fa-thumbs-o-up"></i>
       </div>
     </div>

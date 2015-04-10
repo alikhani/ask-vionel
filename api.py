@@ -259,6 +259,8 @@ def search_get(path, headers, query=None):
 
     print url
 
+    print "h1: {0}".format(headers)
+
     api_res = requests.get(url, headers=headers)
 
     if api_res.status_code == 200:
@@ -298,6 +300,7 @@ def headerFixer(headers):
         header['X-Forwarded-For'] = headers['X-Real-IP']
     if 'User-Agent' in headers:
         header['User-Agent'] = headers['User-Agent']
+        header['X-Session-Token'] = "TushwtZUsz9ufV8x1iDQQoWeLgQYOf"
     return header
 
 
@@ -381,7 +384,8 @@ def get_character(character):
     return json.dumps(resp)
 
 
-@app.route('/api/search', methods=['GET'])
+@app.route('/api/search', methods=['GET', 'OPTIONS'])
+@crossdomain(origin='*')
 def search():
     query = {}
 

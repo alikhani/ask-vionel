@@ -32,7 +32,8 @@ angular
       var d = new Date();
       d.setMonth(d.getMonth() + 1);
 
-        var cookie = name + "=" + JSON.stringify(value) + '; path=/; domain=.'+$location.host()+'; expires=' + d.toUTCString() + ';';
+        var cookie = name + '=' + JSON.stringify(value) + '; path=/; domain=.'+$location.host()+'; expires=' + d.toUTCString() + ';';
+        console.log("cookie: ",cookie);
 
       document.cookie = cookie;
     },
@@ -55,13 +56,13 @@ angular
         return _authenticated;
       },
       getSessiontoken: function() {
-        _sessionToken = Cookie.get("user");
+        var _sessionToken = Cookie.get("user");
         return _sessionToken;
       },
       isInRole: function(role) {
         if (!_authenticated || !_identity.roles){ return false; }
 
-        return _identity.roles.indexOf(role) != -1;
+        return _identity.roles.indexOf(role) !== -1;
       },
       isInAnyRole: function(roles) {
         if (!_authenticated || !_identity.roles) { return false; }
@@ -83,16 +84,17 @@ angular
       },
       authenticate: function(identity) {
         _identity = identity;
-        _authenticated = identity != null;
+        _authenticated = identity !== null;
 
         if (identity) {
-          // console.log("set user: ",identity);
+          console.log("set user: ",identity);
           Cookie.set("user",angular.toJson(identity));
-          // localStorage.setItem("user.identity", angular.toJson(identity)); 
+          localStorage.setItem("user.identity", angular.toJson(identity)); 
         } else {
-          // console.log("delete");
+          console.log("delete");
           Cookie.delete("user");
-          localStorage.removeItem("user.portrait");
+          localStorage.removeItem("user.identity");
+          _authenticated = false;
           // Cookie.delete("sessionToken");
           // localStorage.removeItem("user.identity");
         }
@@ -119,8 +121,9 @@ angular
                     "sessionToken": data.response.sessionToken,
                     "isTemp": true
                 };
-          // Cookie.set("user", angular.toJson(user));
-          // console.log("u: ",user);
+          Cookie.set("user", angular.toJson(user));
+          localStorage.setItem("user.identity", angular.toJson(user)); 
+          console.log("u: ",user);
           callback(user);
         });
       },
@@ -140,7 +143,7 @@ angular
 
         var self = this;
 
-_identity = angular.fromJson(Cookie.get("user")/*localStorage.getItem("user.identity")*/);
+_identity = angular.fromJson(localStorage.getItem("user.identity"));
 self.authenticate(_identity);
 deferred.resolve(_identity);
 
@@ -160,12 +163,12 @@ return deferred.promise;
           var isAuthenticated = principal.isAuthenticated();
           var user = principal.getUser();
 
-          // console.log("auth: ",isAuthenticated,", user: ",user);
+          console.log("auth: ",isAuthenticated,", user: ",user);
 
           if(isAuthenticated || user) {
-            // console.log("there is a user");
+            console.log("there is a user");
           } else {
-            // console.log("not auth");
+            console.log("not auth");
             principal.authenticateTempUser( function(resp) {
               console.log("callback: ",resp);
               principal.authenticate(resp);
@@ -188,16 +191,19 @@ return deferred.promise;
         request: function(config) {
           var canceler = $q.defer();
           var p = $injector.get('principal');
+          console.log("bla");
           user = p.getUser();
+          console.log("user: ",user);
           // console.log("getUser: ",user,", id: ",p.isIdentityResolved(),", root: ",$rootScope.user,", cookie: ",Cookie.get("user"));
           if (user) {
-            config.headers['X-Session-Token'] = user.sessionToken;
+            // config.headers['X-Session-Token'] = user.sessionToken;
+            console.log("head: ",config);
           } else {
 
-            if(config.url !== "/api/temp_auth") {
-              config.timeout = canceler.promise;
-              canceler.resolve();
-            }
+            // if(config.url !== "/api/temp_auth") {
+            //   config.timeout = canceler.promise;
+            //   canceler.resolve();
+            // }
 
           }
           return config || $q.when(config);
@@ -206,7 +212,10 @@ return deferred.promise;
     return sessionInjector;
   }])
 
-  .config(function ($routeProvider) {
+  .config(function ($routeProvider, $httpProvider) {
+
+    $httpProvider.interceptors.push('sessionInjector');
+
     $routeProvider
       .when('/', {
         templateUrl: 'views/main.html',
@@ -253,7 +262,7 @@ return deferred.promise;
   .directive('background', ['preload', function(preload) {
     return {
       restrict: 'E',
-      link: function(scope, element, attrs, tabsCtrl) {
+      link: function(scope, element, attrs) {
 
         // element.hide();
         element.addClass('vl-hide');
