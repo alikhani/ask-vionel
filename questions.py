@@ -1,39 +1,60 @@
-import json
+import sys
+sys.path.append('/home/alden/documents/vionel-content/vionel-data-model')
+from vionelement import * 
+from vionmeta import get_new_fields
+from api import search_get
+from header import header
+import random
 
-API_KEY = 'XHJK73jsad753dGKNLCUWD6D57dx'
-NEW_API = 'http://api.vionel.com/{0}' 
+max_tries = 10
 
-def search_get(path, headers, query=None):
-	base_url = 'http://api.vionel.com/{0}'
-	if (query):
-		base_url += '?' + urllib.urlencode(query).replace('%3A', ':').replace('%7C', '|')
-		url = base_url.format(path)
-		print url
-		api_res = requests.get(url, headers=headers)
-		if api_res.status_code == 200:
-			return api_res.json()
-	else:
-		return {"responseCode": api_res.status_code, "error": {"text": api_res.text}}
-		
-@app.route('/api/search', methods=['GET'])
-def search():
-	query = {}    
-	# print request.args
-	for key in request.args:
-		query[key] = request.args.get(key).encode('utf-8')
-	# print "q: {0}".format(query[key])    
-	header = headerFixer(request.headers)
-	# res = api_get('search', query)
-	res = search_get('search', header, query)
-	return json.dumps(res)
+def build_query_string(query):
+	fields = get_new_fields(Query)
+	q_string = '|'.join([x for x in [get_query_field_string(query, f) for f in fields] if x])
+	return q_string
 
-def headerFixer(headers):
-	header = {}
-	if 'X-Session-Token' in headers:
-		header['X-Session-Token'] = headers['X-Session-Token']
-	if 'X-Real-IP' in headers:
-		header['X-Forwarded-For'] = headers['X-Real-IP']
-	if 'User-Agent' in headers:
-		header['User-Agent'] = headers['User-Agent']
-	return header
+def build_query_dict(query, size=10, page=1):
+	return {'size' : str(size), 'page' : str(page), 'tags' : build_query_string(query)}
 
+def get_query_field_string(query, field):
+	value = getattr(query, field)
+	if not value:
+		return None
+	if isinstance(value, RangeField):
+		if isinstance(value, DateRange):
+			return '{0}:range({1}-{2})'.format(field, value.min.year, value.max.year)
+		else:
+			return '{0}:range({1}-{2})'.format(field, value.min, value.max)
+	if isinstance(value, list):
+		return '{0}:'.format(field) + ','.join([nm.value for x in value for nm in x.name])
+
+def get_random_tag_pair(response_json):
+	exclude = ['providers', 'years', 'languages']
+	cats = [x for x in response_json['response']['availableToQuery']['categories'] if x['filterTerms'] and x['name'] not in exclude]
+	if len(cats) <= 2:
+		return []
+	category_pairs = random.sample(cats, 2)
+	tag_pair = tuple([random.choice(x['filterTerms']) for x in category_pairs])
+	return tag_pair
+
+# TODO Should be updated to handle ranges
+def get_random_tag_pair_with_result(query, response_json, header=header):
+	tag_pair = get_random_tag_pair(response_json)
+	new_query = Query(**query.as_dict())
+	print tag_pair
+	for tag in tag_pair:
+		value = {'name': [{'lang': 'en', 'value': tag['keywordFormat']}]}
+		attr = getattr(new_query, tag['type'].lower())
+		if attr:
+			attr.append(value)
+		else:
+			setattr(new_query, tag['type'].lower(), [value])
+	result = search_get('search', header, build_query_dict(new_query))
+	return tag_pair, result
+
+def get_valid_random_tag_pair(query, response_json, header=header):
+	for i in range(max_tries):
+		tag_pair, result = get_random_tag_pair_with_result(query, response_json, header)
+		if result['totalHits']:
+			return tag_pair, result
+	return None
