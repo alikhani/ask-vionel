@@ -59,6 +59,42 @@ body {
   margin-top: 28px;
 }
 
+
+.answer div {
+  display: inline-block;
+}
+.answer div i {
+  font-size: 3em;
+}
+.no {
+  -moz-transform: scaleX(-1);
+  -o-transform: scaleX(-1);
+  -webkit-transform: scaleX(-1);
+  transform: scaleX(-1);
+  filter: FlipH;
+  -ms-filter: "FlipH";
+}
+
+.background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  -webkit-transition: all 0.2s ease-out;
+  -moz-transition: all 0.2s ease-out;
+  -o-transition: all 0.2s ease-out;
+  transition: all 0.2s ease-out;
+  background-size: cover;
+  background-position: top center;
+  opacity: 0;
+  display: block;
+}
+
+.vl-show {
+  opacity: 1;
+}
+
 /* Responsive: Portrait tablets and up */
 @media screen and (min-width: 768px) {
   .container {
