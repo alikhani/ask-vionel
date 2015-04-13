@@ -1,8 +1,8 @@
 <div>
   <h1>Vionel</h1>
   <div class="question">
-    <h2>bla</h2>
-    <div class="answer">
+    <h2>{{question.question}}</h2>
+    <div class="answer" ng-if="loaded">
       <div class="no" ng-click="no(question)">
         <i class="fa fa-thumbs-o-down"></i>
       </div>

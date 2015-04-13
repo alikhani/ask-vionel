@@ -5,6 +5,7 @@ from flask import Flask, request, session
 import requests
 
 from crossdomain import crossdomain
+from format_question import *
 
 
 app = Flask(__name__)
@@ -776,33 +777,37 @@ def get_providers():
 def initial_question():
     query = Query()
     header = headerFixer(request.headers)
-    print header
+    #print header
     q_response = search_get('search', header, build_query_dict(query))
     tag_pair, new_query = get_valid_random_tag_pair(query, q_response, header)
-    response = {'tags' : tag_pair, 'query' : new_query.as_dict()}
+    question = get_question(tag_pair)
+    response = {'tags' : tag_pair, 'query' : new_query.as_dict(), 'question': question}
     return json.dumps(response)
 
 @app.route('/api/question_results', methods=['POST', 'OPTIONS'])
 @crossdomain(origin='*')
 def question_results():
     q = json.loads(request.data)
-    print "q"
+    #print "q"
     query = Query(**q)
     header = headerFixer(request.headers)
     q_response = search_get('search', header, build_query_dict(query))
     movies = get_random_movies_from_result(q_response)
     return json.dumps(movies)
 
-@app.route('/api/new_tag', methods=['POST'])
+@app.route('/api/new_tag', methods=['POST', 'OPTIONS'])
 @crossdomain(origin='*')
-def new_tag(query, tags):
+def new_tag():
     q = json.loads(request.data)
-    query = Query(**q.query)
+    q1 = q['query']
+    qTag = q['tags']
+    query = Query(**q1)
     header = headerFixer(request.headers)
-    q_response = search_get('search', header, build_query_dict(q.query))
+    q_response = search_get('search', header, build_query_dict(query))
     tag = get_random_tag(q_response)
-    add_tag_to_query(q.query, q.tag)
-    response = {'tags' : q.tags + [tag], 'query' : q.query.as_dict()}
+    question = get_question([tag])
+    add_tag_to_query(query, tag)
+    response = {'tags' : qTag + [tag], 'query' : query.as_dict(), 'question': question}
     return json.dumps(response)
 
 app.secret_key = 'Me secret long time'

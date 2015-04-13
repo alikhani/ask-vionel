@@ -18,6 +18,7 @@ angular.module('askVionelApp')
     $scope.searchQuery = "";
 
     $scope.step = 1;
+    $scope.loaded = false;
 
     var baseUrl = 'http://127.0.0.1:3044';
     $scope.question = {};
@@ -27,6 +28,7 @@ angular.module('askVionelApp')
             success(function(data, status, headers, config) {
                 console.log("success! status: ",status,", data: ",data);
                 $scope.question = data;
+                $scope.loaded = true;
                 // callback(data);
             }).
             error(function(data, status, headers, config) {
@@ -49,11 +51,11 @@ angular.module('askVionelApp')
             });
     }
 
-    function newTag(questions) {
-        $http({method: 'POST', url: baseUrl + '/api/new_tag', data: {"query": questions.query, "tags": questions.tags}}).
+    function newTag(query, tags, callback) {
+        $http({method: 'POST', url: baseUrl + '/api/new_tag', data: {"query": query, "tags": tags}}).
             success(function(data, status, headers, config) {
                 console.log("success! status: ",status,", data: ",data);
-                // callback(data);
+                callback(data);
             }).
             error(function(data, status, headers, config) {
                 console.log("error! status: ",status,", data: ",data);
@@ -109,11 +111,17 @@ angular.module('askVionelApp')
     // $scope.question = {'tag': 'genre', 'query': 'action', 'question': 'this is question 1'};
 
     $scope.result = [];
+    $scope.oldQuery = {};
 
     $scope.yes = function(questions) {
         console.log("yes");
-        // newTag(questions);
-        questionResult(questions.query);
+        newTag(questions.query, questions.tags, function(res) {
+            questionResult(res.query);
+            $scope.oldQuery = res.query;
+            $scope.question = res;
+            $scope.step++;
+        });
+        // questionResult(questions.query);
         // questionResult(questions.query);
         // addFilter(query, tag, function(data) {
         //     console.log("data: ",data);
@@ -129,10 +137,14 @@ angular.module('askVionelApp')
     };
     $scope.no = function(query, tag) {
         console.log("no: ",tag);
-        if ($scope.step) {
+        if ($scope.step === 1) {
             qInit();
         } else {
-            questionResult(questions.query);
+            console.log("old: ",$scope.oldQuery)
+            questionResult($scope.oldQuery, function(res) {
+                questionResult(res.query);
+                $scope.question = res;
+            });
         }
         // $scope.question = {'query': 'drama', 'question': 'this is question 3'};
         // $scope.result = [
