@@ -1,1 +1,0 @@
-header = {'X-Forwarded-For': u'192.168.33.1', 'X-Session-Token': u'KWpg6EtdxEn6Qi8m2EKwVfqyXmS93c', 'User-Agent': u'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36'}
